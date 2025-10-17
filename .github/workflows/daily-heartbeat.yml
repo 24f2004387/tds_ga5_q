@@ -1,0 +1,31 @@
+name: Daily Heartbeat Commit
+
+on:
+  schedule:
+    # Runs at 02:07 UTC every day (specific hour+minute, no wildcards)
+    - cron: "7 2 * * *"
+  workflow_dispatch: {}  # allow manual run to test now
+
+permissions:
+  contents: write
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Record heartbeat (24f2004387@ds.study.iitm.ac.in)
+        run: |
+          mkdir -p .github/heartbeats
+          printf "run_at_utc=%s\n" "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" > .github/heartbeats/daily.txt
+          echo "Appended heartbeat to .github/heartbeats/daily.txt"
+
+      - name: Commit and push heartbeat
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add .github/heartbeats/daily.txt
+          git commit -m "Daily heartbeat: $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "No changes to commit"
+          git push
